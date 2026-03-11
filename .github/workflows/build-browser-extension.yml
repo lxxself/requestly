@@ -12,7 +12,7 @@ on:
           - chrome
           - firefox
           - safari
-      env:
+      build_env:
         description: "Build environment"
         required: true
         default: "prod"
@@ -72,7 +72,7 @@ jobs:
         run: |
           cd browser-extension/config
           npm install
-          BROWSER=${{ github.event.inputs.browser || 'chrome' }} ENV=${{ github.event.inputs.env || 'prod' }} npm run build
+          BROWSER=${{ github.event.inputs.browser || 'chrome' }} ENV=${{ github.event.inputs.build_env || 'prod' }} npm run build
 
       - name: Install and build browser extension common
         run: |
@@ -97,6 +97,6 @@ jobs:
       - name: Upload browser extension artifact
         uses: actions/upload-artifact@v4
         with:
-          name: requestly-browser-extension-${{ github.event.inputs.browser || 'chrome' }}-${{ github.event.inputs.env || 'prod' }}
+          name: requestly-browser-extension-${{ github.event.inputs.browser || 'chrome' }}-${{ github.event.inputs.build_env || 'prod' }}
           path: browser-extension/mv3/dist/
           retention-days: 30
