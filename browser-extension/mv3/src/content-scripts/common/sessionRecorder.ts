@@ -230,16 +230,14 @@ const showManualModeRecordingWidget = () => {
     });
   }
 
-  const recordingLimitInMilliseconds = 5 * 60 * 1000; // 5 mins * 60 secs * 1000 ms
   const recordingTime = Date.now() - sessionRecorderState.recordingStartTime;
-  const currentRecordingTime = recordingTime <= recordingLimitInMilliseconds ? recordingTime : null;
 
   widget.dispatchEvent(
     new CustomEvent(
       "show",
       cloneDetails({
         detail: {
-          currentRecordingTime,
+          currentRecordingTime: recordingTime,
           position: sessionRecorderState.widgetPosition,
         },
       })

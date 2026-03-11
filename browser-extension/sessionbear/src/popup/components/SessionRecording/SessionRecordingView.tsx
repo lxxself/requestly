@@ -16,7 +16,6 @@ const SessionRecordingView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<chrome.tabs.Tab>();
   const [isRecordingSession, setIsRecordingSession] = useState<boolean>();
   const [isManualMode, setIsManualMode] = useState<boolean>();
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState<boolean>(false);
   const currentTabId = activeTab?.id;
   const isRecordingInManualMode = isRecordingSession && isManualMode;
 
@@ -74,36 +73,22 @@ const SessionRecordingView: React.FC = () => {
     }
   }, [currentTabId]);
 
-  useEffect(() => {
-    chrome.runtime.sendMessage({ action: EXTENSION_MESSAGES.GET_IS_USER_LOGGED_IN }, (isLoggedIn) => {
-      setIsUserLoggedIn(isLoggedIn);
-    });
-  }, []);
-
   const handleConfigureBtnClick = useCallback(() => {
     sendEvent(EVENT.SESSION_RECORDINGS_CONFIG_OPENED);
     window.open(`${config.WEB_URL}/settings/sessions-settings?source=popup`, "_blank");
   }, []);
 
   const handleViewLastFiveMinReplay = useCallback(() => {
-    if (!isUserLoggedIn) {
-      window.open(`${config.WEB_URL}/sessions?loginRequired`, "_blank");
-      return;
-    }
     viewRecordingOnClick();
-  }, [isUserLoggedIn, viewRecordingOnClick]);
+  }, [viewRecordingOnClick]);
 
   const handleManualRecordingButtonClick = useCallback(() => {
-    if (!isUserLoggedIn) {
-      window.open(`${config.WEB_URL}/sessions?loginRequired`, "_blank");
-      return;
-    }
     if (isRecordingInManualMode) {
       viewRecordingOnClick();
     } else {
       startRecordingOnClick();
     }
-  }, [isRecordingInManualMode, isUserLoggedIn, startRecordingOnClick, viewRecordingOnClick]);
+  }, [isRecordingInManualMode, startRecordingOnClick, viewRecordingOnClick]);
 
   const watchReplayBtnTooltipContent =
     isRecordingInManualMode || !isRecordingSession ? (
