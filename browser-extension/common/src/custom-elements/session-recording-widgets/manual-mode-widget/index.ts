@@ -2,7 +2,6 @@ import styles from "./index.css";
 import { getEpochToMMSSFormat, registerCustomElement, setInnerHTML } from "../../utils";
 import BinIcon from "../../../../resources/icons/bin.svg";
 import StopRecordingIcon from "../../../../resources/icons/stopRecording.svg";
-import InfoIcon from "../../../../resources/icons/info.svg";
 import { RQDraggableWidget } from "../../abstract-classes/draggable-widget";
 
 enum RQSessionRecordingWidgetEvent {
@@ -12,7 +11,6 @@ enum RQSessionRecordingWidgetEvent {
 
 const TAG_NAME = "rq-session-recording-widget";
 const DEFAULT_POSITION = { left: 30, bottom: 30 };
-const EXPLICIT_RECORDING_LIMIT = 5 * 60 * 1000; // 5 mins * 60 secs * 1000 ms
 
 class RQSessionRecordingWidget extends RQDraggableWidget {
   #currentRecordingTime = 0;
@@ -58,17 +56,11 @@ class RQSessionRecordingWidget extends RQDraggableWidget {
   }
 
   _getDefaultMarkup() {
-    const tooltipContent =
-      "Session recording is limited to the most recent 5 minutes. The recording is still active, but you can only view the last 5 minutes of the session.";
-
     return `
       <style>${styles}</style>
       <div id="container">
           <span class="recording-icon"></span>
           <span class="recording-time">00:00</span>
-          <div title="Recording info" class="recording-info-icon" data-tooltip="${tooltipContent}">
-            ${InfoIcon}
-          </div>
           <div class="action stop-recording">${StopRecordingIcon} Stop & watch</div>
           <div class="action discard-recording" title="Discard">${BinIcon}</div>
       </div>
@@ -89,23 +81,14 @@ class RQSessionRecordingWidget extends RQDraggableWidget {
       clearInterval(this.#recordingTimerIntervalId);
     }
 
-    if (this.#currentRecordingTime < EXPLICIT_RECORDING_LIMIT) {
-      setInnerHTML(container.querySelector(".recording-time"), getEpochToMMSSFormat(this.#currentRecordingTime));
-    }
+    setInnerHTML(container.querySelector(".recording-time"), getEpochToMMSSFormat(this.#currentRecordingTime));
 
     this.#recordingTimerIntervalId = setInterval(
       () => {
         this.#currentRecordingTime = this.#currentRecordingTime + 1000;
-
-        if (this.#currentRecordingTime < EXPLICIT_RECORDING_LIMIT) {
-          setInnerHTML(container.querySelector(".recording-time"), getEpochToMMSSFormat(this.#currentRecordingTime));
-        } else {
-          setInnerHTML(container.querySelector(".recording-time"), "05:00");
-          container.querySelector(".recording-info-icon").classList.add("visible");
-          clearInterval(this.#recordingTimerIntervalId);
-        }
+        setInnerHTML(container.querySelector(".recording-time"), getEpochToMMSSFormat(this.#currentRecordingTime));
       },
-      this.#currentRecordingTime < EXPLICIT_RECORDING_LIMIT ? 1000 : 0
+      1000
     );
   }
 
@@ -117,7 +100,6 @@ class RQSessionRecordingWidget extends RQDraggableWidget {
     this.#currentRecordingTime = 0;
     this.#recordingTimerIntervalId = null;
     setInnerHTML(this.getContainer().querySelector(".recording-time"), "00:00");
-    this.getContainer().querySelector(".recording-info-icon").classList.remove("visible");
   }
 
   hide() {
