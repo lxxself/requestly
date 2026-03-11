@@ -1,0 +1,102 @@
+name: Build Browser Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: "Target browser"
+        required: true
+        default: "chrome"
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - safari
+      env:
+        description: "Build environment"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - local
+          - beta
+          - prod
+  push:
+    branches: [master]
+    paths:
+      - "browser-extension/**"
+      - "common/**"
+      - "shared/**"
+      - "index.js"
+      - "rollup.config.js"
+
+jobs:
+  build:
+    name: Build Browser Extension (${{ github.event.inputs.browser || 'chrome' }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install root dependencies
+        run: npm install --ignore-scripts
+
+      - name: Install and build analytics-vendors
+        run: |
+          cd common/analytics-vendors
+          npm install
+          npm run build
+
+      - name: Install and build rule-processor
+        run: |
+          cd common/rule-processor
+          npm install
+          npm run build
+
+      - name: Build requestly-core
+        run: npm run build
+
+      - name: Install and build shared
+        run: |
+          cd shared
+          npm install
+          npm run build
+
+      - name: Generate browser extension config
+        run: |
+          cd browser-extension/config
+          npm install
+          BROWSER=${{ github.event.inputs.browser || 'chrome' }} ENV=${{ github.event.inputs.env || 'prod' }} npm run build
+
+      - name: Install and build browser extension common
+        run: |
+          cd browser-extension/common
+          npm install
+          npm run build
+
+      - name: Install and build MV3 extension
+        run: |
+          cd browser-extension/mv3
+          npm install
+          npm run build:current
+
+      - name: List build artifacts
+        run: |
+          echo "Build artifacts:"
+          find browser-extension/mv3/dist -type f | sort
+          echo ""
+          echo "Total size:"
+          du -sh browser-extension/mv3/dist
+
+      - name: Upload browser extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: requestly-browser-extension-${{ github.event.inputs.browser || 'chrome' }}-${{ github.event.inputs.env || 'prod' }}
+          path: browser-extension/mv3/dist/
+          retention-days: 30
