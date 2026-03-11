@@ -30,6 +30,9 @@ on:
       - "index.js"
       - "rollup.config.js"
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build Browser Extension (${{ github.event.inputs.browser || 'chrome' }})
